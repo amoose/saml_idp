@@ -34,6 +34,9 @@ module SamlIdp
       end
       decode_request(raw_saml_request)
 
+      # preserve response URL for after auth
+      session[:return_to] = saml_response_url
+      
       # TODO(awong): This block has an incorrect if conditional. It should be
       # conditional on use of the redirect binding and there should be a selector
       # for which message type a signature is required for.
@@ -134,7 +137,7 @@ module SamlIdp
     end
 
     def service_provider
-      SamlIdp.config.service_provider.finder.(saml_request.issuer)
+      @sp ||= SamlIdp.config.service_provider.finder.(saml_request.issuer)
     end
 
     def build_response_doc(principal, opts)
@@ -153,6 +156,7 @@ module SamlIdp
             block_encryption: service_provider[:block_encryption],
             key_transport: service_provider[:key_transport],
           }
+  
           raise "Invalid encryption config for #{saml_request.issuer}" if encryption_opts[:cert].nil? || encryption_opts[:block_encryption].nil? || encryption_opts[:key_transport].nil?
         end
 
