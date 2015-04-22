@@ -74,6 +74,8 @@ module SamlIdp
           render nothing: true, status: :forbidden
           return
         end
+      elsif saml_request.logout_request.present?
+        return saml_request.valid?
       end
       render nothing: true, status: :forbidden unless valid_saml_request?
     end
